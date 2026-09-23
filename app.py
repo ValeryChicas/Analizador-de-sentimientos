@@ -20,6 +20,9 @@ from textblob import TextBlob
 from deep_translator import GoogleTranslator, MyMemoryTranslator
 import plotly.graph_objects as go
 
+# ---------------------------------------------------------
+# CONFIGURACIÓN DE PÁGINA Y ESTILOS
+# ---------------------------------------------------------
 st.set_page_config(
     page_title="Analizador de sentimientos",
     page_icon="🧠",
@@ -33,17 +36,17 @@ st.markdown("""
     #MainMenu, header, footer { visibility: hidden; }
     .navbar { display: none !important; }
 
-    /* ---- Hero ---- */
-    .hero-title { color:#fff; font-size:2.4rem; font-weight:800; margin:4px 0; }
-    .hero-sub { color:#8b9bb4; font-size:0.95rem; max-width:700px; margin:0 auto 10px auto; }
+    /* Hero */
+    .hero-title { color:#fff; font-size: 2.2rem; font-weight:800; margin:4px 0; text-align: center; }
+    .hero-sub { color:#8b9bb4; font-size:0.95rem; max-width:700px; margin:0 auto 10px auto; text-align: center; }
 
-    /* ---- Botones tipo píldora segmentada ---- */
+    /* Botones tipo píldora segmentada */
     .st-key-domain_pill, .st-key-filter_pill {
         background-color: #121826; border: 1px solid #233148; border-radius: 10px; padding: 4px;
     }
     .st-key-domain_pill .stButton > button, .st-key-filter_pill .stButton > button {
         background-color: transparent !important; border:none !important; color:#8b9bb4 !important;
-        border-radius:7px !important;
+        border-radius:7px !important; width: 100%;
     }
     .st-key-domain_pill .stButton > button:hover, .st-key-filter_pill .stButton > button:hover {
         background-color:#1d2847 !important; color:#fff !important;
@@ -52,7 +55,7 @@ st.markdown("""
         background-color:#3b82f6 !important; color:#fff !important; font-weight:700 !important;
     }
 
-    /* ---- Editor tipo código ---- */
+    /* Editor tipo código */
     .st-key-editor_card { background-color:#0d121f; border:1px solid #1e293b; border-radius:12px; padding:0; overflow:hidden; }
     .editor-header { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; border-bottom:1px solid #1e293b; }
     .traffic-dots span { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
@@ -62,43 +65,39 @@ st.markdown("""
 
     .st-key-editor_card .stTextArea textarea {
         background-color:#0d121f !important; color:#e2e8f0 !important; border:none !important;
-        border-radius:0 !important; font-family: monospace !important; font-size:0.92rem !important;
-        line-height:1.85rem !important; padding-top:14px !important; white-space:pre !important;
+        border-radius:0 !important; font-family: monospace !important; font-size:0.9rem !important;
+        line-height:1.6rem !important; padding-top:14px !important;
     }
-    .gutter { font-family: monospace; font-size:0.8rem; color:#4b5568; line-height:1.85rem; padding-top:14px; text-align:right; padding-right:10px; user-select:none; }
+    .gutter { font-family: monospace; font-size:0.8rem; color:#4b5568; line-height:1.6rem; padding-top:14px; text-align:right; padding-right:10px; user-select:none; }
 
-    .editor-footer { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-top:1px solid #1e293b; }
+    .editor-footer { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-top:1px solid #1e293b; flex-wrap: wrap; gap: 10px; }
     .status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#00e699; margin-right:6px; }
     .footer-info { color:#8b9bb4; font-size:0.8rem; }
     .main-btn > button {
         background-color:#3b82f6 !important; color:#fff !important; border-radius:8px !important;
-        padding:8px 20px !important; font-weight:700 !important; font-size:0.9rem !important; border:none !important;
+        padding:8px 20px !important; font-weight:700 !important; font-size:0.9rem !important; border:none !important; width: 100%;
     }
 
-    /* ---- Sección genérica ---- */
+    /* Secciones */
     .section-title { color:#fff; font-size:1.15rem; font-weight:800; margin: 6px 0 12px 0; }
     .section-right { color:#6b7280; font-size:0.75rem; font-family: monospace; }
 
-    /* ---- Tarjetas de métricas 2x2 ---- */
-    .metric-card { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:16px; height:100%; }
+    /* Tarjetas de métricas */
+    .metric-card { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:16px; height:100%; box-sizing: border-box; }
     .metric-title { font-size:0.72rem; font-weight:700; color:#8b9bb4; text-transform:uppercase; display:flex; justify-content:space-between; }
-    .metric-value { font-size:1.9rem; font-weight:800; color:#fff; margin:6px 0 4px 0; }
+    .metric-value { font-size:1.7rem; font-weight:800; color:#fff; margin:6px 0 4px 0; word-break: break-word; }
     .metric-sub-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px; }
     .metric-sub { font-size:0.75rem; color:#8b9bb4; }
 
-    .polarity-track { position:relative; height:8px; border-radius:5px; margin-top:14px;
-        background: linear-gradient(90deg, #ff4d6d 0%, #a0aab8 50%, #00e699 100%); }
-    .polarity-marker { position:absolute; top:-4px; width:0; height:0;
-        border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid #ffffff; }
+    .polarity-track { position:relative; height:8px; border-radius:5px; margin-top:14px; background: linear-gradient(90deg, #ff4d6d 0%, #a0aab8 50%, #00e699 100%); }
+    .polarity-marker { position:absolute; top:-4px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid #ffffff; }
 
-    /* ---- Barra de prevalencia ---- */
-    .prevalence-bar { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:14px 18px;
-        display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
-    .prevalence-badge { background-color:#0d1b2e; color:#8b9bb4; border:1px solid #233148; border-radius:8px;
-        padding:4px 10px; font-size:0.8rem; font-weight:700; font-family: monospace; }
+    /* Barra de prevalencia */
+    .prevalence-bar { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .prevalence-badge { background-color:#0d1b2e; color:#8b9bb4; border:1px solid #233148; border-radius:8px; padding:4px 10px; font-size:0.8rem; font-weight:700; font-family: monospace; }
 
-    /* ---- Tarjetas de reseña ---- */
-    .review-card { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:16px; margin-bottom:12px; }
+    /* Tarjetas de reseña */
+    .review-card { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:16px; margin-bottom:12px; word-wrap: break-word; }
     .lang-badge { background:#1c2537; color:#8b9bb4; font-size:0.72rem; padding:2px 7px; border-radius:5px; font-weight:700; font-family:monospace; }
     .domain-txt { color:#6b7280; font-size:0.75rem; font-family:monospace; margin-left:6px; }
     .sent-badge { display:inline-flex; align-items:center; gap:5px; border-radius:12px; padding:4px 12px; font-weight:bold; font-size:0.78rem; }
@@ -106,25 +105,41 @@ st.markdown("""
     .badge-pos { background:#0d382c; color:#00e699; } .badge-pos .dot{background:#00e699;}
     .badge-neg { background:#3d1720; color:#ff4d6d; } .badge-neg .dot{background:#ff4d6d;}
     .badge-neu { background:#2a2e3d; color:#a0aab8; } .badge-neu .dot{background:#a0aab8;}
-    .quote-txt { font-size:1.02rem; font-weight:600; color:#fff; margin:8px 0 4px 0; }
+    .quote-txt { font-size:1rem; font-weight:600; color:#fff; margin:8px 0 4px 0; line-height: 1.4rem; }
     .trans-txt { font-size:0.82rem; color:#6b7280; font-style:italic; margin-bottom:8px; }
     .hl-pos { background-color:#0d382c; color:#8effcf; padding:1px 4px; border-radius:4px; }
     .hl-neg { background-color:#3d1720; color:#ff9fb1; padding:1px 4px; border-radius:4px; }
-    .tag-emotion { background-color:#1c2537; color:#8b9bb4; padding:3px 9px; border-radius:6px; font-size:0.74rem; margin-right:5px; }
+    .tag-emotion { background-color:#1c2537; color:#8b9bb4; padding:3px 9px; border-radius:6px; font-size:0.74rem; margin-right:5px; display:inline-block; margin-bottom:4px; }
 
-    /* ---- Distribución ---- */
+    /* Distribución y Emociones */
     .side-card { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:16px; }
     .legend-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:#c9d1d9; padding:5px 0; }
     .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:8px; }
-
-    .emo-chip { display:inline-flex; align-items:center; gap:6px; background-color:#1c2537; color:#c9d1d9;
-        padding:5px 11px; border-radius:14px; font-size:0.78rem; margin:3px 5px 3px 0; }
+    .emo-chip { display:inline-flex; align-items:center; gap:6px; background-color:#1c2537; color:#c9d1d9; padding:5px 11px; border-radius:14px; font-size:0.78rem; margin:3px 5px 3px 0; }
     .emo-count { background:#0b0e17; color:#8b9bb4; font-size:0.68rem; padding:1px 6px; border-radius:8px; }
-
     .stProgress > div > div > div > div { background-color:#3b82f6 !important; }
+
+    /* REGLAS RESPONSIVAS PARA CELULAR */
+    @media (max-width: 768px) {
+        .hero-title { font-size: 1.6rem; }
+        .hero-sub { font-size: 0.85rem; }
+        .metric-value { font-size: 1.4rem; }
+        .quote-txt { font-size: 0.92rem; }
+        .gutter { display: none !important; } /* Ocultar números de línea en móvil */
+        
+        /* Forzar flexbox responsive en tarjetas de reseñas */
+        .review-card div[style*="display:flex"] {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
+# ---------------------------------------------------------
+# ESTADO
+# ---------------------------------------------------------
 if "domain_filter" not in st.session_state:
     st.session_state.domain_filter = "General"
 if "results" not in st.session_state:
@@ -208,10 +223,10 @@ def highlight_quote(text):
     return _HIGHLIGHT_RE.sub(repl, escaped)
 
 # ---------------------------------------------------------
-# Titulo de la pagina
+# HERO
 # ---------------------------------------------------------
 st.markdown('''
-<div style="text-align:center; margin: 26px 0 18px 0;">
+<div style="text-align:center; margin: 15px 0 15px 0;">
     <div class="hero-title">Analizador de Sentimientos</div>
     <div class="hero-sub">Analiza los sentimientos en tiempo real con detección de emociones y polaridad.</div>
 </div>
@@ -232,7 +247,7 @@ if uploaded_file is not None:
             file_contents = "\n".join(df[first_col].dropna().astype(str).tolist())
         
         st.session_state.comment_input = file_contents
-        st.success(f" Archivo '{uploaded_file.name}' cargado con éxito.")
+        st.success(f"Archivo '{uploaded_file.name}' cargado con éxito.")
     except Exception as e:
         st.error(f"Error al leer el archivo: {e}")
 
@@ -241,7 +256,7 @@ if uploaded_file is not None:
 # ---------------------------------------------------------
 DOMAINS = ["General", "Restaurante", "Tienda"]
 
-lbl_col, tabs_col = st.columns([2, 3])
+lbl_col, tabs_col = st.columns([1, 2])
 with lbl_col:
     st.markdown("<div style='padding-top:6px; color:#8b9bb4; font-size:0.85rem; font-weight:700;'>LOTE DE EVALUACIÓN</div>", unsafe_allow_html=True)
 with tabs_col:
@@ -255,7 +270,7 @@ with tabs_col:
                     st.rerun()
 
 # ---------------------------------------------------------
-# EDITOR con diseño de tipo ccodigo
+# EDITOR TIPO CÓDIGO RESPONSIVO
 # ---------------------------------------------------------
 with st.container(key="editor_card"):
     st.markdown('''
@@ -266,20 +281,20 @@ with st.container(key="editor_card"):
     </div>
     ''', unsafe_allow_html=True)
 
-    gcol, tcol = st.columns([0.04, 0.96])
+    gcol, tcol = st.columns([0.08, 0.92])
     lines_now = st.session_state.comment_input.split("\n")
     with gcol:
         nums = "".join(f"<div>{i:02d}</div>" for i in range(1, max(len(lines_now), 8) + 1))
         st.markdown(f"<div class='gutter'>{nums}</div>", unsafe_allow_html=True)
     with tcol:
-        user_input = st.text_area("Comentarios", key="comment_input", height=190, label_visibility="collapsed")
+        user_input = st.text_area("Comentarios", key="comment_input", height=180, label_visibility="collapsed")
 
     num_lines = len([l for l in user_input.split("\n") if l.strip()])
-    f_left, f_right = st.columns([3, 1])
+    f_left, f_right = st.columns([2, 1])
     with f_left:
         st.markdown(
             f"<div class='footer-info' style='padding-top:8px;'><span class='status-dot'></span>"
-            f"{num_lines} líneas detectadas · {len(user_input)} caracteres · Auto-detección activa</div>",
+            f"{num_lines} líneas detectadas · {len(user_input)} caracteres</div>",
             unsafe_allow_html=True
         )
     with f_right:
@@ -378,18 +393,18 @@ if data:
     neu_sub, neu_c = sub_label(neu_pct, "neu")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    r_l, r_r = st.columns([3, 1])
+    r_l, r_r = st.columns([2, 1])
     with r_l:
         st.markdown('<div class="section-title">📊 Resumen de Inferencia</div>', unsafe_allow_html=True)
     with r_r:
-        st.markdown(f"<div class='section-right' style='text-align:right; padding-top:16px;'>Latencia: {data['elapsed_ms']}ms</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='section-right' style='text-align:right; padding-top:6px;'>Latencia: {data['elapsed_ms']}ms</div>", unsafe_allow_html=True)
 
     m1, m2 = st.columns(2)
     with m1:
         st.markdown(f'''
         <div class="metric-card">
             <div class="metric-title">POSITIVOS <span>🙂</span></div>
-            <div class="metric-value">{counts["Positivo"]} <span style="font-size:0.9rem; color:#8b9bb4;">/ {total_rev} ({pos_pct:.0f}%)</span></div>
+            <div class="metric-value">{counts["Positivo"]} <span style="font-size:0.85rem; color:#8b9bb4;">({pos_pct:.0f}%)</span></div>
             <div class="metric-sub"><span class="metric-sub-dot" style="background:{pos_c};"></span>{pos_sub}</div>
         </div>
         ''', unsafe_allow_html=True)
@@ -397,18 +412,18 @@ if data:
         st.markdown(f'''
         <div class="metric-card">
             <div class="metric-title">NEGATIVOS <span>🙁</span></div>
-            <div class="metric-value">{counts["Negativo"]} <span style="font-size:0.9rem; color:#8b9bb4;">/ {total_rev} ({neg_pct:.0f}%)</span></div>
+            <div class="metric-value">{counts["Negativo"]} <span style="font-size:0.85rem; color:#8b9bb4;">({neg_pct:.0f}%)</span></div>
             <div class="metric-sub"><span class="metric-sub-dot" style="background:{neg_c};"></span>{neg_sub}</div>
         </div>
         ''', unsafe_allow_html=True)
 
-    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
     m3, m4 = st.columns(2)
     with m3:
         st.markdown(f'''
         <div class="metric-card">
             <div class="metric-title">NEUTROS <span>😐</span></div>
-            <div class="metric-value">{counts["Neutral"]} <span style="font-size:0.9rem; color:#8b9bb4;">/ {neu_pct:.0f}%</span></div>
+            <div class="metric-value">{counts["Neutral"]} <span style="font-size:0.85rem; color:#8b9bb4;">({neu_pct:.0f}%)</span></div>
             <div class="metric-sub"><span class="metric-sub-dot" style="background:{neu_c};"></span>{neu_sub}</div>
         </div>
         ''', unsafe_allow_html=True)
@@ -417,7 +432,7 @@ if data:
         st.markdown(f'''
         <div class="metric-card">
             <div class="metric-title">POLARIDAD AVG <span>📈</span></div>
-            <div class="metric-value">{avg_polarity:+.2f} <span style="font-size:0.85rem; color:#8b9bb4;">[-1..+1]</span></div>
+            <div class="metric-value">{avg_polarity:+.2f}</div>
             <div class="polarity-track"><div class="polarity-marker" style="left:calc({marker_pct}% - 6px);"></div></div>
         </div>
         ''', unsafe_allow_html=True)
@@ -425,10 +440,10 @@ if data:
     # Prevalencia
     if pos_pct == neg_pct and pos_pct >= neu_pct:
         label = "Bimodal"
-        desc = f"🤝 Empate Positivo y Negativo ({pos_pct:.0f}% vs {neg_pct:.0f}%) — Distribución polarizada."
+        desc = f"🤝 Empate Positivo y Negativo ({pos_pct:.0f}% vs {neg_pct:.0f}%)"
     elif pos_pct == neg_pct == neu_pct:
         label = "Equilibrado"
-        desc = "Distribución uniforme entre las tres categorías."
+        desc = "Distribución uniforme"
     else:
         leader_key = max(counts, key=counts.get)
         leader_pct = counts[leader_key] / total_rev * 100
@@ -436,30 +451,26 @@ if data:
         desc = f"⚖️ {leader_key} predomina con {counts[leader_key]}/{total_rev} comentarios ({leader_pct:.0f}%)."
     delta = abs(pos_pct - neg_pct) / 100
 
-    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
     st.markdown(f'''
     <div class="prevalence-bar">
         <div>⚖️ <b style="color:#fff;">Sentimiento Prevalente: {esc(label)}</b><br>
-        <span style="color:#8b9bb4; font-size:0.85rem;">{esc(desc)}</span></div>
+        <span style="color:#8b9bb4; font-size:0.8rem;">{esc(desc)}</span></div>
         <div class="prevalence-badge">±{delta:.2f}</div>
     </div>
     ''', unsafe_allow_html=True)
 
     # ---- Análisis detallado ----
     st.markdown("<br>", unsafe_allow_html=True)
-    d_l, d_r = st.columns([3, 1])
-    with d_l:
-        st.markdown('<div class="section-title">📋 Análisis Detallado</div>', unsafe_allow_html=True)
-    with d_r:
-        st.markdown(f"<div class='section-right' style='text-align:right; padding-top:16px;'>{total_rev} REGISTROS</div>", unsafe_allow_html=True)
+    st.markdown('<div class="section-title">📋 Análisis Detallado</div>', unsafe_allow_html=True)
 
     with st.container(key="filter_pill"):
         f1, f2, f3, f4 = st.columns(4)
         filtros = [
             ("Todos", f"Todos ({total_rev})", f1),
-            ("Positivo", f"Positivos ({counts['Positivo']})", f2),
-            ("Negativo", f"Negativos ({counts['Negativo']})", f3),
-            ("Neutral", f"Neutrales ({counts['Neutral']})", f4),
+            ("Positivo", f"Pos. ({counts['Positivo']})", f2),
+            ("Negativo", f"Neg. ({counts['Negativo']})", f3),
+            ("Neutral", f"Neu. ({counts['Neutral']})", f4),
         ]
         for key, lbl, col in filtros:
             with col:
@@ -477,14 +488,14 @@ if data:
         st.markdown(f'''
         <div class="review-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <div><span class="lang-badge">{item["lang"]}</span><span class="domain-txt">· Dominio: {esc(item["domain"])}</span></div>
+                <div><span class="lang-badge">{item["lang"]}</span><span class="domain-txt">· {esc(item["domain"])}</span></div>
                 <span class="sent-badge {item["badge_class"]}"><span class="dot"></span>{item["sentiment"]}</span>
             </div>
             <div class="quote-txt">"{highlight_quote(item["original"])}"</div>
             {trans_html}
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-top:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-top:6px; flex-wrap:wrap; gap:6px;">
                 <div>{emotions_html}</div>
-                <div style="color:#8b9bb4; display:flex; gap:16px;">
+                <div style="color:#8b9bb4; display:flex; gap:12px;">
                     <span>Polaridad: <b style="color:#fff;">{item["polarity"]:+.2f}</b></span>
                     <span>Subjetividad: <b style="color:#fff;">{item["subjectivity"]:.2f}</b></span>
                 </div>
@@ -499,34 +510,19 @@ if data:
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="section-title">🌐 Distribución y Emociones</div>', unsafe_allow_html=True)
 
-    avg_abs_pol = sum(abs(r["polarity"]) for r in items) / total_rev
-    confidence = min(99.9, 80 + avg_abs_pol * 20)
-
-    dist_l, dist_r = st.columns([1, 1.3])
+    dist_l, dist_r = st.columns([1, 1])
     with dist_l:
-        h_l, h_r = st.columns([2, 1])
-        with h_l:
-            st.markdown("<div style='color:#8b9bb4; font-size:0.75rem; font-weight:700;'>ESPECTRO DE SENTIMIENTO</div>", unsafe_allow_html=True)
-        with h_r:
-            st.markdown(f"<div class='section-right' style='text-align:right;'>Confidence: {confidence:.1f}%</div>", unsafe_allow_html=True)
-
         fig = go.Figure(data=[go.Pie(
             labels=list(counts.keys()), values=list(counts.values()), hole=.68,
             marker_colors=['#00e699', '#ff4d6d', '#a0aab8'], textinfo='none', showlegend=False,
         )])
         fig.update_layout(
             paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(t=10, b=10, l=10, r=10), height=220,
-            annotations=[dict(text=f"<b style='font-size:22px;color:#fff;'>{total_rev}</b><br><span style='font-size:11px;color:#6b7280;'>LOTE</span>",
+            margin=dict(t=10, b=10, l=10, r=10), height=200,
+            annotations=[dict(text=f"<b style='font-size:20px;color:#fff;'>{total_rev}</b><br><span style='font-size:10px;color:#6b7280;'>LOTE</span>",
                                showarrow=False, font=dict(color="#fff"))]
         )
         st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown(f'''
-        <div class="legend-row"><div><span class="legend-dot" style="background:#00e699;"></span>Positivo</div><div>{pos_pct:.0f}% ({counts["Positivo"]})</div></div>
-        <div class="legend-row"><div><span class="legend-dot" style="background:#ff4d6d;"></span>Negativo</div><div>{neg_pct:.0f}% ({counts["Negativo"]})</div></div>
-        <div class="legend-row"><div><span class="legend-dot" style="background:#a0aab8;"></span>Neutral</div><div>{neu_pct:.0f}% ({counts["Neutral"]})</div></div>
-        ''', unsafe_allow_html=True)
 
     with dist_r:
         emo_html = "".join(
@@ -535,7 +531,7 @@ if data:
         )
         st.markdown(f'''
         <div class="side-card">
-            <div style="color:#8b9bb4; font-size:0.75rem; font-weight:700; margin-bottom:10px;">VECTORES DE EMOCIONES DETECTADAS</div>
+            <div style="color:#8b9bb4; font-size:0.75rem; font-weight:700; margin-bottom:8px;">VECTORES DE EMOCIONES DETECTADAS</div>
             <div>{emo_html}</div>
         </div>
         ''', unsafe_allow_html=True)
