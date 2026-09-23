@@ -7,15 +7,11 @@
 # py -m streamlit run app.py
 #
 
-# Se utilizó CSS vía st.markdown para aplicar un mejor diseño
-# mientras que Python y TextBlob ejecutan internamente toda la lógica del análisis.
 import html
-import json
 import re
 import time
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 from textblob import TextBlob
 from deep_translator import GoogleTranslator, MyMemoryTranslator
 import plotly.graph_objects as go
@@ -24,7 +20,7 @@ import plotly.graph_objects as go
 # CONFIGURACIÓN DE PÁGINA Y ESTILOS
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Analizador de sentimientos",
+    page_title="Analizador de Sentimientos",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -37,10 +33,10 @@ st.markdown("""
     .navbar { display: none !important; }
 
     /* Hero */
-    .hero-title { color:#fff; font-size: 2.2rem; font-weight:800; margin:4px 0; text-align: center; }
-    .hero-sub { color:#8b9bb4; font-size:0.95rem; max-width:700px; margin:0 auto 10px auto; text-align: center; }
+    .hero-title { color:#fff; font-size: 2rem; font-weight:800; margin:4px 0; text-align: center; }
+    .hero-sub { color:#8b9bb4; font-size:0.9rem; max-width:700px; margin:0 auto 10px auto; text-align: center; }
 
-    /* Botones tipo píldora segmentada */
+    /* Botones de categoría */
     .st-key-domain_pill, .st-key-filter_pill {
         background-color: #121826; border: 1px solid #233148; border-radius: 10px; padding: 4px;
     }
@@ -78,7 +74,7 @@ st.markdown("""
         padding:8px 20px !important; font-weight:700 !important; font-size:0.9rem !important; border:none !important; width: 100%;
     }
 
-    /* Secciones */
+    /* Secciones generales */
     .section-title { color:#fff; font-size:1.15rem; font-weight:800; margin: 6px 0 12px 0; }
     .section-right { color:#6b7280; font-size:0.75rem; font-family: monospace; }
 
@@ -113,32 +109,20 @@ st.markdown("""
 
     /* Distribución y Emociones */
     .side-card { background-color:#121826; border:1px solid #1e293b; border-radius:10px; padding:16px; }
-    .legend-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:#c9d1d9; padding:5px 0; }
-    .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:8px; }
     .emo-chip { display:inline-flex; align-items:center; gap:6px; background-color:#1c2537; color:#c9d1d9; padding:5px 11px; border-radius:14px; font-size:0.78rem; margin:3px 5px 3px 0; }
     .emo-count { background:#0b0e17; color:#8b9bb4; font-size:0.68rem; padding:1px 6px; border-radius:8px; }
-    .stProgress > div > div > div > div { background-color:#3b82f6 !important; }
 
-    /* REGLAS RESPONSIVAS PARA CELULAR */
+    /* Reglas Responsivas Limpias para Móvil */
     @media (max-width: 768px) {
-        .hero-title { font-size: 1.6rem; }
+        .hero-title { font-size: 1.5rem; }
         .hero-sub { font-size: 0.85rem; }
-        .metric-value { font-size: 1.4rem; }
-        .quote-txt { font-size: 0.92rem; }
-        .gutter { display: none !important; } /* Ocultar números de línea en móvil */
-        
-        /* Forzar flexbox responsive en tarjetas de reseñas */
-        .review-card div[style*="display:flex"] {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 6px !important;
-        }
+        .gutter { display: none !important; }
     }
     </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# ESTADO
+# ESTADO DE SESIÓN
 # ---------------------------------------------------------
 if "domain_filter" not in st.session_state:
     st.session_state.domain_filter = "General"
@@ -156,12 +140,12 @@ if "comment_input" not in st.session_state:
     )
 
 # ---------------------------------------------------------
-# FUNCIONES
+# FUNCIONES TÉCNICAS
 # ---------------------------------------------------------
 def esc(text):
     return html.escape(str(text), quote=True)
 
-def translate_to_english(text, retries=2, delay=1.0):
+def translate_to_english(text, retries=1, delay=0.3):
     for _ in range(retries):
         try:
             translated = GoogleTranslator(source='es', target='en').translate(text)
@@ -179,12 +163,12 @@ def translate_to_english(text, retries=2, delay=1.0):
 
 def get_emotions(text, polarity):
     t = text.lower()
-    if polarity > 0.1:
-        if "excelente" in t or "love" in t or "encantó" in t or "increíble" in t:
+    if polarity > 0.05:
+        if any(w in t for w in ["excelente", "love", "encantó", "increíble", "maravillosa"]):
             return ["Gratitud", "Satisfacción", "Entusiasmo"]
         return ["Admiración", "Alegría"]
-    elif polarity < -0.1:
-        if "horrible" in t or "roto" in t or "terrible" in t or "pésimo" in t:
+    elif polarity < -0.05:
+        if any(w in t for w in ["horrible", "roto", "terrible", "pésimo", "fría"]):
             return ["Frustración", "Decepción", "Enojo"]
         return ["Insatisfacción", "Reclamo"]
     return ["Indiferencia", "Calma"]
@@ -205,10 +189,9 @@ def classify_domain(original, translated):
     return "General"
 
 POS_PHRASES = ["excelente estado", "excelente", "maravillosa", "maravilloso", "increíble", "súper rápido",
-               "perfecto", "perfecta", "encantó", "genial", "fantástico", "fantástica", "resolvieron",
-               "great", "wonderful", "excellent", "amazing", "love", "intuitive"]
+               "perfecto", "perfecta", "encantó", "genial", "fantástico", "resolvieron", "intuitive"]
 NEG_PHRASES = ["súper fría", "pésimo", "horrible", "terrible", "tardaron más de una hora", "roto",
-               "driving my team crazy", "mala calidad", "lenta", "awful", "broken", "crazy", "fría"]
+               "driving my team crazy", "mala calidad", "lenta", "fría"]
 
 _POS_SET = {p.lower() for p in POS_PHRASES}
 _ALL_PHRASES = sorted(POS_PHRASES + NEG_PHRASES, key=len, reverse=True)
@@ -223,7 +206,7 @@ def highlight_quote(text):
     return _HIGHLIGHT_RE.sub(repl, escaped)
 
 # ---------------------------------------------------------
-# HERO
+# HERO Y CARGA DE ARCHIVOS
 # ---------------------------------------------------------
 st.markdown('''
 <div style="text-align:center; margin: 15px 0 15px 0;">
@@ -232,9 +215,6 @@ st.markdown('''
 </div>
 ''', unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# CARGA DE ARCHIVOS (.TXT O .CSV)
-# ---------------------------------------------------------
 uploaded_file = st.file_uploader("📁 Opcional: Carga un archivo de texto o CSV con comentarios", type=["txt", "csv"])
 
 if uploaded_file is not None:
@@ -245,17 +225,15 @@ if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
             first_col = df.columns[0]
             file_contents = "\n".join(df[first_col].dropna().astype(str).tolist())
-        
         st.session_state.comment_input = file_contents
         st.success(f"Archivo '{uploaded_file.name}' cargado con éxito.")
     except Exception as e:
         st.error(f"Error al leer el archivo: {e}")
 
 # ---------------------------------------------------------
-# LOTE DE EVALUACIÓN + DOMINIOS
+# CATEGORÍAS
 # ---------------------------------------------------------
 DOMAINS = ["General", "Restaurante", "Tienda"]
-
 lbl_col, tabs_col = st.columns([1, 2])
 with lbl_col:
     st.markdown("<div style='padding-top:6px; color:#8b9bb4; font-size:0.85rem; font-weight:700;'>LOTE DE EVALUACIÓN</div>", unsafe_allow_html=True)
@@ -270,7 +248,7 @@ with tabs_col:
                     st.rerun()
 
 # ---------------------------------------------------------
-# EDITOR TIPO CÓDIGO RESPONSIVO
+# EDITOR DE CÓDIGO
 # ---------------------------------------------------------
 with st.container(key="editor_card"):
     st.markdown('''
@@ -303,7 +281,7 @@ with st.container(key="editor_card"):
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# PROCESAMIENTO
+# EJECUCIÓN DEL ANÁLISIS
 # ---------------------------------------------------------
 if btn_analizar:
     lines = [line.strip() for line in user_input.split("\n") if line.strip()]
@@ -321,11 +299,9 @@ if btn_analizar:
         total = len(lines)
 
         for i, text in enumerate(lines, start=1):
-            status_text.markdown(
-                f"<span style='color:#8b9bb4; font-size:0.85rem;'>Analizando línea {i} de {total}...</span>",
-                unsafe_allow_html=True
-            )
+            status_text.markdown(f"<span style='color:#8b9bb4; font-size:0.85rem;'>Procesando línea {i} de {total}...</span>", unsafe_allow_html=True)
             translated_text, is_trans = translate_to_english(text)
+            
             blob = TextBlob(translated_text)
             polarity = blob.sentiment.polarity
             subjectivity = blob.sentiment.subjectivity
@@ -368,7 +344,7 @@ if btn_analizar:
         st.session_state.filter = "Todos"
 
 # ---------------------------------------------------------
-# RESULTADOS
+# DESPLIEGUE DE RESULTADOS
 # ---------------------------------------------------------
 data = st.session_state.results
 if data:
@@ -383,10 +359,10 @@ if data:
 
     def sub_label(pct, kind):
         if kind == "pos":
-            return ("Alta satisfacción", "#00e699") if pct >= 40 else (("Satisfacción moderada", "#00e699") if pct >= 20 else ("Satisfacción baja", "#a0aab8"))
+            return ("Alta satisfacción", "#00e699") if pct >= 40 else ("Satisfacción moderada", "#00e699")
         if kind == "neg":
-            return ("Atención requerida", "#ff4d6d") if pct >= 40 else (("Revisar casos", "#ff4d6d") if pct >= 20 else ("Bajo riesgo", "#a0aab8"))
-        return ("Informativo", "#a0aab8") if pct >= 10 else ("Sin carga afectiva", "#a0aab8")
+            return ("Atención requerida", "#ff4d6d") if pct >= 40 else ("Revisar casos", "#ff4d6d")
+        return ("Informativo", "#a0aab8")
 
     pos_sub, pos_c = sub_label(pos_pct, "pos")
     neg_sub, neg_c = sub_label(neg_pct, "neg")
@@ -438,17 +414,10 @@ if data:
         ''', unsafe_allow_html=True)
 
     # Prevalencia
-    if pos_pct == neg_pct and pos_pct >= neu_pct:
-        label = "Bimodal"
-        desc = f"🤝 Empate Positivo y Negativo ({pos_pct:.0f}% vs {neg_pct:.0f}%)"
-    elif pos_pct == neg_pct == neu_pct:
-        label = "Equilibrado"
-        desc = "Distribución uniforme"
-    else:
-        leader_key = max(counts, key=counts.get)
-        leader_pct = counts[leader_key] / total_rev * 100
-        label = leader_key
-        desc = f"⚖️ {leader_key} predomina con {counts[leader_key]}/{total_rev} comentarios ({leader_pct:.0f}%)."
+    leader_key = max(counts, key=counts.get)
+    leader_pct = counts[leader_key] / total_rev * 100
+    label = leader_key
+    desc = f"⚖️ {leader_key} predomina con {counts[leader_key]}/{total_rev} comentarios ({leader_pct:.0f}%)."
     delta = abs(pos_pct - neg_pct) / 100
 
     st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
@@ -482,18 +451,20 @@ if data:
     active_filter = st.session_state.filter
     filtered = items if active_filter == "Todos" else [r for r in items if r["sentiment"].lower().startswith(active_filter.lower())]
 
+    # COMPONENTE RENDERIZADO LIMPIO DE TARJETAS
     for idx, item in enumerate(filtered, start=1):
-        emotions_html = "".join(f'<span class="tag-emotion">{esc(e)}</span>' for e in item["emotions"])
+        emotions_html = "".join([f'<span class="tag-emotion">{esc(e)}</span>' for e in item["emotions"]])
         trans_html = f'<div class="trans-txt">"{esc(item["translated"])}"</div>' if item["translated"] else ""
+        
         st.markdown(f'''
         <div class="review-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <div><span class="lang-badge">{item["lang"]}</span><span class="domain-txt">· {esc(item["domain"])}</span></div>
                 <span class="sent-badge {item["badge_class"]}"><span class="dot"></span>{item["sentiment"]}</span>
             </div>
             <div class="quote-txt">"{highlight_quote(item["original"])}"</div>
             {trans_html}
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-top:6px; flex-wrap:wrap; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-top:10px; flex-wrap:wrap; gap:8px;">
                 <div>{emotions_html}</div>
                 <div style="color:#8b9bb4; display:flex; gap:12px;">
                     <span>Polaridad: <b style="color:#fff;">{item["polarity"]:+.2f}</b></span>
